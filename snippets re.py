@@ -100,6 +100,7 @@ class FrozenLake(Environment):
         self.absorbing_state = n_states - 1
 
         self.p_table = np.zeros((n_states, n_states, n_actions), dtype=float)
+        action_table = dict()
         for state in range(len(self.p_table)):
             for next_state in range(len(self.p_table[state])):
                 for action in range(len(self.p_table[state][next_state])):
@@ -338,12 +339,12 @@ play(env)
 
 ################ Model-based algorithms ################
 
-def policy_evaluation(env, policy, gamma, theta, max_iterations):
-    value = np.zeros(env.n_states, dtype=np.float)
+#  def policy_evaluation(env, policy, gamma, theta, max_iterations):
+#     value = np.zeros(env.n_states, dtype=np.float)
 
-    # TODO:
+#     # TODO:
 
-    return value
+#     return value
 
 
 def policy_improvement(env, value, gamma):
