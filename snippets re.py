@@ -108,7 +108,7 @@ class FrozenLake(Environment):
                         if next_state == state:
                             self.p_table[state][next_state][action] = 1.0
                             continue
-                    
+
                     else:
                         if self.lake_flat[state] == "$" or self.lake_flat[state] == "#":
                             if next_state == self.absorbing_state:
@@ -120,7 +120,7 @@ class FrozenLake(Environment):
 
                         if action == 0:
                             if next_state == state:
-                                if state - self.col < 0:   
+                                if state - self.col < 0:
                                     self.p_table[state][next_state][action] = 1 - self.slip + self.slip / 4
                                     if state + self.col >= n_states:
                                         self.p_table[state][next_state][action] += self.slip / 4
@@ -130,7 +130,7 @@ class FrozenLake(Environment):
                                         self.p_table[state][next_state][action] += self.slip / 4
                                     continue
                                 else:
-                                    if state - self.col < 0: 
+                                    if state - self.col < 0:
                                         self.p_table[state][next_state][action] += self.slip / 4
                                     if state + self.col >= n_states:
                                         self.p_table[state][next_state][action] += self.slip / 4
@@ -138,7 +138,7 @@ class FrozenLake(Environment):
                                         self.p_table[state][next_state][action] += self.slip / 4
                                     if state % self.col == 0:
                                         self.p_table[state][next_state][action] += self.slip / 4
-                                continue                                
+                                continue
                             if next_state == state - self.col:
                                 self.p_table[state][next_state][action] = 1 - self.slip + self.slip / 4
                                 continue
@@ -153,10 +153,10 @@ class FrozenLake(Environment):
                                 if state % self.col != self.col - 1:
                                     self.p_table[state][next_state][action] = self.slip / 4
                                     continue
-                        
+
                         if action == 1:
                             if next_state == state:
-                                if state % self.col == 0:   
+                                if state % self.col == 0:
                                     self.p_table[state][next_state][action] = 1 - self.slip + self.slip / 4
                                     if state - self.col < 0:
                                         self.p_table[state][next_state][action] += self.slip / 4
@@ -166,7 +166,7 @@ class FrozenLake(Environment):
                                         self.p_table[state][next_state][action] += self.slip / 4
                                     continue
                                 else:
-                                    if state - self.col < 0: 
+                                    if state - self.col < 0:
                                         self.p_table[state][next_state][action] += self.slip / 4
                                     if state + self.col >= n_states:
                                         self.p_table[state][next_state][action] += self.slip / 4
@@ -174,7 +174,7 @@ class FrozenLake(Environment):
                                         self.p_table[state][next_state][action] += self.slip / 4
                                     if state % self.col == 0:
                                         self.p_table[state][next_state][action] += self.slip / 4
-                                    continue                                 
+                                    continue
                             if next_state == state - self.col:
                                 self.p_table[state][next_state][action] = self.slip / 4
                                 continue
@@ -189,10 +189,10 @@ class FrozenLake(Environment):
                                 if state % self.col != self.col - 1:
                                     self.p_table[state][next_state][action] = self.slip / 4
                                     continue
-                            
+
                         if action == 2:
                             if next_state == state:
-                                if state + self.col >= n_states:   
+                                if state + self.col >= n_states:
                                     self.p_table[state][next_state][action] = 1 - self.slip + self.slip / 4
                                     if state - self.col < 0:
                                         self.p_table[state][next_state][action] += self.slip / 4
@@ -202,7 +202,7 @@ class FrozenLake(Environment):
                                         self.p_table[state][next_state][action] += self.slip / 4
                                     continue
                                 else:
-                                    if state - self.col < 0: 
+                                    if state - self.col < 0:
                                         self.p_table[state][next_state][action] += self.slip / 4
                                     if state + self.col >= n_states:
                                         self.p_table[state][next_state][action] += self.slip / 4
@@ -210,7 +210,7 @@ class FrozenLake(Environment):
                                         self.p_table[state][next_state][action] += self.slip / 4
                                     if state % self.col == 0:
                                         self.p_table[state][next_state][action] += self.slip / 4
-                                    continue                             
+                                    continue
                             if next_state == state - self.col:
                                 self.p_table[state][next_state][action] = self.slip / 4
                                 continue
@@ -228,7 +228,7 @@ class FrozenLake(Environment):
 
                         if action == 3:
                             if next_state == state:
-                                if state % self.col == self.col - 1:   
+                                if state % self.col == self.col - 1:
                                     self.p_table[state][next_state][action] = 1 - self.slip + self.slip / 4
                                     if state - self.col < 0:
                                         self.p_table[state][next_state][action] += self.slip / 4
@@ -238,7 +238,7 @@ class FrozenLake(Environment):
                                         self.p_table[state][next_state][action] += self.slip / 4
                                     continue
                                 else:
-                                    if state - self.col < 0: 
+                                    if state - self.col < 0:
                                         self.p_table[state][next_state][action] += self.slip / 4
                                     if state + self.col >= n_states:
                                         self.p_table[state][next_state][action] += self.slip / 4
@@ -246,7 +246,7 @@ class FrozenLake(Environment):
                                         self.p_table[state][next_state][action] += self.slip / 4
                                     if state % self.col == 0:
                                         self.p_table[state][next_state][action] += self.slip / 4
-                                    continue    
+                                    continue
                             if next_state == state - self.col:
                                 self.p_table[state][next_state][action] = self.slip / 4
                                 continue
