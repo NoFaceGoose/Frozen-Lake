@@ -71,16 +71,16 @@ class Environment(EnvironmentModel):
 
 class FrozenLake(Environment):
     def __init__(self, lake, slip, max_steps, seed=None):
-        # """
-        # lake: A matrix that represents the lake. For example:
-        #  lake =  [['&', '.', '.', '.'],
-        #           ['.', '#', '.', '#'],
-        #           ['.', '.', '.', '#'],
-        #           ['#', '.', '.', '$']]
-        # slip: The probability that the agent will slip
-        # max_steps: The maximum number of time steps in an episode
-        # seed: A seed to control the random number generator (optional)
-        # """
+        """
+        lake: A matrix that represents the lake. For example:
+        lake =  [['&', '.', '.', '.'],
+                ['.', '#', '.', '#'],
+                ['.', '.', '.', '#'],
+                ['#', '.', '.', '$']]
+        slip: The probability that the agent will slip
+        max_steps: The maximum number of time steps in an episode
+        seed: A seed to control the random number generator (optional)
+        """
         # start (&), frozen (.), hole (#), goal ($)
         self.lake = np.array(lake)
         self.lake_flat = self.lake.reshape(-1)
