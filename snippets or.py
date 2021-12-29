@@ -95,17 +95,53 @@ class FrozenLake(Environment):
 
         # TODO:
         self.actions = {
-            0:self.moveUp(),
-            1:self.moveLeft(),
-            2:self.moveDown(),
-            3:self.moveRight(),
+            0:self.moveUp,
+            1:self.moveLeft,
+            2:self.moveDown,
+            3:self.moveRight,
         }
         # init probiblity combination
         self.p_combine = np.zeros((n_states, n_states, n_actions), dtype=float)
+        # [next_state, state, action]
+        for next_state in n_states: # traverse all states
+            for state in n_states: # traverse all next states
+                for action in n_actions: # # traverse all actions
+                    if state == self.absorbing_state:
+                        if next_state == self.absorbing_state:
+                            self.p_combine[next_state][state][action] = 1.0
+                            continue
+                        # if the state in absorbing_state, and the next_state is also absorbing state
+                    else:
+                        if self.lake_flat[next_state][state] == '$' or self.lake_flat[next_state][state] == '#':
+                            if next_state == self.absorbing_state:
+                                self.p_combine[next_state][state][action] = 1.0
+                                continue
+                            else:
+                                self.p_combine[next_state][state][action] = 0.0
+                                continue
+                        self.actions[action](next_state, state)
+                    
+
 
 
         Environment.__init__(self, n_states, n_actions, max_steps, pi, seed)
+<<<<<<< Updated upstream
 
+=======
+    
+    def moveUp(self, next_state, state):
+        if next_state == state:
+            if state < self.lake.shape[1]:
+                pass
+        pass
+    def moveLeft(self, next_state, state):
+        pass
+    def moveDown(self, next_state, state):
+        pass
+    def moveRight(self, next_state, state):
+        pass
+        
+>>>>>>> Stashed changes
     def step(self, action):
         state, reward, done = Environment.step(self, action)
 
