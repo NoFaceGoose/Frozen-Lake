@@ -125,9 +125,6 @@ class FrozenLake(Environment):
 
 
         Environment.__init__(self, n_states, n_actions, max_steps, pi, seed)
-<<<<<<< Updated upstream
-
-=======
     
     def moveUp(self, next_state, state):
         if next_state == state:
@@ -140,8 +137,6 @@ class FrozenLake(Environment):
         pass
     def moveRight(self, next_state, state):
         pass
-        
->>>>>>> Stashed changes
     def step(self, action):
         state, reward, done = Environment.step(self, action)
 
