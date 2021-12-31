@@ -86,184 +86,54 @@ class FrozenLake(Environment):
         self.lake_flat = self.lake.reshape(-1)
 
         shape = self.lake.shape
-        self.row = shape[0]
-        self.col = shape[1]
+        self.rows, self.cols = shape[0], shape[1]
 
         self.slip = slip
 
         n_states = self.lake.size + 1
         n_actions = 4
 
+        # translation to the postion of each action(up, left, down, right) 
+        self.actions_row =(-1, 0, 1 ,0)
+        self.actions_col =(0, -1, 0 ,1)
+
         pi = np.zeros(n_states, dtype=float)
         pi[np.where(self.lake_flat == "&")[0]] = 1.0
 
         self.absorbing_state = n_states - 1
 
+        # initialize p_table (probability table)
         self.p_table = np.zeros((n_states, n_states, n_actions), dtype=float)
-        for state in range(len(self.p_table)):
-            for next_state in range(len(self.p_table[state])):
-                for action in range(len(self.p_table[state][next_state])):
-                    if state == self.absorbing_state:
-                        if next_state == state:
-                            self.p_table[state][next_state][action] = 1.0
-                            continue
 
-                    else:
-                        if self.lake_flat[state] == "$" or self.lake_flat[state] == "#":
-                            if next_state == self.absorbing_state:
-                                self.p_table[state][next_state][action] = 1.0
-                                continue
-                            else:
-                                self.p_table[state][next_state][action] = 0.0
-                                continue
+        # assgin each value in p_table
+        for state in range(n_states):
+            # get the position of current state
+            row, col = int(state /  self.cols), state %  self.cols
 
-                        if action == 0:
-                            if next_state == state:
-                                if state - self.col < 0:
-                                    self.p_table[state][next_state][action] = 1 - self.slip + self.slip / 4
-                                    if state + self.col >= n_states:
-                                        self.p_table[state][next_state][action] += self.slip / 4
-                                    if state % self.col == 0:
-                                        self.p_table[state][next_state][action] += self.slip / 4
-                                    if state % self.col == self.col - 1:
-                                        self.p_table[state][next_state][action] += self.slip / 4
-                                    continue
-                                else:
-                                    if state - self.col < 0:
-                                        self.p_table[state][next_state][action] += self.slip / 4
-                                    if state + self.col >= n_states:
-                                        self.p_table[state][next_state][action] += self.slip / 4
-                                    if state % self.col == self.col - 1:
-                                        self.p_table[state][next_state][action] += self.slip / 4
-                                    if state % self.col == 0:
-                                        self.p_table[state][next_state][action] += self.slip / 4
-                                continue
-                            if next_state == state - self.col:
-                                self.p_table[state][next_state][action] = 1 - self.slip + self.slip / 4
-                                continue
-                            if next_state == state + self.col:
-                                self.p_table[state][next_state][action] = self.slip / 4
-                                continue
-                            if next_state == state - 1:
-                                if state % self.col != 0:
-                                    self.p_table[state][next_state][action] = self.slip / 4
-                                    continue
-                            if next_state == state + 1:
-                                if state % self.col != self.col - 1:
-                                    self.p_table[state][next_state][action] = self.slip / 4
-                                    continue
+            # for the absorbing, hole and goal state, the next state must be absorbing state
+            if state == self.absorbing_state or self.lake_flat[state] in ('#', '$'):
+                self.p_table[state, self.absorbing_state, :] = 1
+                continue
+            
+            # assign and accumulate the value for each action
+            for action in range(n_actions):
+                for slip_action in range(n_actions):
+                    # the state will not change by default
+                    next_state = state
+                    # calculate the new position
+                    next_row, next_col = row + self.actions_row[slip_action], col + self.actions_col[slip_action]
+                    # the state will change only when the new postion is still in the grid
+                    if 0 <= next_row < self.rows and 0 <= next_col < self.cols:
+                        # get the state of the new postion
+                        next_state = (self.cols * next_row) + next_col
 
-                        if action == 1:
-                            if next_state == state:
-                                if state % self.col == 0:
-                                    self.p_table[state][next_state][action] = 1 - self.slip + self.slip / 4
-                                    if state - self.col < 0:
-                                        self.p_table[state][next_state][action] += self.slip / 4
-                                    if state + self.col >= n_states:
-                                        self.p_table[state][next_state][action] += self.slip / 4
-                                    if state % self.col == self.col - 1:
-                                        self.p_table[state][next_state][action] += self.slip / 4
-                                    continue
-                                else:
-                                    if state - self.col < 0:
-                                        self.p_table[state][next_state][action] += self.slip / 4
-                                    if state + self.col >= n_states:
-                                        self.p_table[state][next_state][action] += self.slip / 4
-                                    if state % self.col == self.col - 1:
-                                        self.p_table[state][next_state][action] += self.slip / 4
-                                    if state % self.col == 0:
-                                        self.p_table[state][next_state][action] += self.slip / 4
-                                    continue
-                            if next_state == state - self.col:
-                                self.p_table[state][next_state][action] = self.slip / 4
-                                continue
-                            if next_state == state + self.col:
-                                self.p_table[state][next_state][action] = self.slip / 4
-                                continue
-                            if next_state == state - 1:
-                                if state % self.col != 0:
-                                    self.p_table[state][next_state][action] =  1 - self.slip + self.slip / 4
-                                    continue
-                            if next_state == state + 1:
-                                if state % self.col != self.col - 1:
-                                    self.p_table[state][next_state][action] = self.slip / 4
-                                    continue
+                    # the basic average slip probabiity of current state, next_state and action
+                    self.p_table[state, next_state, action] += self.slip / n_actions
 
-                        if action == 2:
-                            if next_state == state:
-                                if state + self.col >= n_states:
-                                    self.p_table[state][next_state][action] = 1 - self.slip + self.slip / 4
-                                    if state - self.col < 0:
-                                        self.p_table[state][next_state][action] += self.slip / 4
-                                    if state % self.col == 0:
-                                        self.p_table[state][next_state][action] += self.slip / 4
-                                    if state % self.col == self.col - 1:
-                                        self.p_table[state][next_state][action] += self.slip / 4
-                                    continue
-                                else:
-                                    if state - self.col < 0:
-                                        self.p_table[state][next_state][action] += self.slip / 4
-                                    if state + self.col >= n_states:
-                                        self.p_table[state][next_state][action] += self.slip / 4
-                                    if state % self.col == self.col - 1:
-                                        self.p_table[state][next_state][action] += self.slip / 4
-                                    if state % self.col == 0:
-                                        self.p_table[state][next_state][action] += self.slip / 4
-                                    continue
-                            if next_state == state - self.col:
-                                self.p_table[state][next_state][action] = self.slip / 4
-                                continue
-                            if next_state == state + self.col:
-                                self.p_table[state][next_state][action] = 1 - self.slip +self.slip / 4
-                                continue
-                            if next_state == state - 1:
-                                if state % self.col != 0:
-                                    self.p_table[state][next_state][action] = self.slip / 4
-                                    continue
-                            if next_state == state + 1:
-                                if state % self.col != self.col - 1:
-                                    self.p_table[state][next_state][action] = self.slip / 4
-                                    continue
-
-                        if action == 3:
-                            if next_state == state:
-                                if state % self.col == self.col - 1:
-                                    self.p_table[state][next_state][action] = 1 - self.slip + self.slip / 4
-                                    if state - self.col < 0:
-                                        self.p_table[state][next_state][action] += self.slip / 4
-                                    if state + self.col >= n_states:
-                                        self.p_table[state][next_state][action] += self.slip / 4
-                                    if state % self.col == 0:
-                                        self.p_table[state][next_state][action] += self.slip / 4
-                                    continue
-                                else:
-                                    if state - self.col < 0:
-                                        self.p_table[state][next_state][action] += self.slip / 4
-                                    if state + self.col >= n_states:
-                                        self.p_table[state][next_state][action] += self.slip / 4
-                                    if state % self.col == self.col - 1:
-                                        self.p_table[state][next_state][action] += self.slip / 4
-                                    if state % self.col == 0:
-                                        self.p_table[state][next_state][action] += self.slip / 4
-                                    continue
-                            if next_state == state - self.col:
-                                self.p_table[state][next_state][action] = self.slip / 4
-                                continue
-                            if next_state == state + self.col:
-                                self.p_table[state][next_state][action] = self.slip / 4
-                                continue
-                            if next_state == state - 1:
-                                if state % self.col != 0:
-                                    self.p_table[state][next_state][action] = self.slip / 4
-                                    continue
-                            if next_state == state + 1:
-                                if state % self.col != self.col - 1:
-                                    self.p_table[state][next_state][action] = 1 - self.slip + self.slip / 4
-                                    continue
-
-                        else:
-                            self.p_table[state][next_state][action] = 0.0
-
+                    # assign the probability of no slipping to the current state, next_state and action
+                    if action == slip_action:
+                        self.p_table[state, next_state, action] += 1 - self.slip
+                    
         Environment.__init__(self, n_states, n_actions, max_steps, pi, seed)
 
     def step(self, action):
