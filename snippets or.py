@@ -81,68 +81,52 @@ class FrozenLake(Environment):
         """
         # start (&), frozen (.), hole (#), goal ($)
         self.lake = np.array(lake)
+        self.row, self.col = self.lake.shape
         self.lake_flat = self.lake.reshape(-1)
 
         self.slip = slip
 
         n_states = self.lake.size + 1
-        n_actions = 4
+        self.actions = [[-1,0],[1,0],[0,-1],[0,1]]
+        n_actions = len(self.actions)
 
         pi = np.zeros(n_states, dtype=float)
         pi[np.where(self.lake_flat == '&')[0]] = 1.0
 
         self.absorbing_state = n_states - 1
 
-        # TODO:
-        self.actions = {
-            0:self.moveUp,
-            1:self.moveLeft,
-            2:self.moveDown,
-            3:self.moveRight,
-        }
-        # init probiblity combination
-        self.p_combine = np.zeros((n_states, n_states, n_actions), dtype=float)
-        # [next_state, state, action]
-        for next_state in n_states: # traverse all states
-            for state in n_states: # traverse all next states
-                for action in n_actions: # # traverse all actions
-                    if state == self.absorbing_state:
-                        if next_state == self.absorbing_state:
-                            self.p_combine[next_state][state][action] = 1.0
-                            continue
-                        # if the state in absorbing_state, and the next_state is also absorbing state
-                    else:
-                        if self.lake_flat[next_state][state] == '$' or self.lake_flat[next_state][state] == '#':
-                            if next_state == self.absorbing_state:
-                                self.p_combine[next_state][state][action] = 1.0
-                                continue
-                            else:
-                                self.p_combine[next_state][state][action] = 0.0
-                                continue
-                        self.actions[action](next_state, state)
-                    
+        super(FrozenLake, self).__init__(n_states, n_actions, max_steps, pi, seed)
 
+        self.p_table = np.zeros((self.n_states, self.n_states, self.n_actions), dtype=float)
+        self.r_table = np.zeros((self.n_states, self.n_states, self.n_actions), dtype=float)
+        
+        self.calculate_p_table()
+        self.calculate_r_table()
 
-
-        Environment.__init__(self, n_states, n_actions, max_steps, pi, seed)
+    def calculate_p_table(self):
+        for state in range(self.n_states):
+            x_pos = int(state / self.col)
+            y_pos = state % self.col
+            if state == self.absorbing_state or self.lake[x_pos, y_pos] in ('#', '$'):
+                self.p_table[state, self.absorbing_state, :] = 1
+                continue
+            
+            for action in range(self.n_actions):
+                for next_action in range(self.n_actions):
+                    next_state = state
+                    next_x_pos = x_pos + self.actions[next_action][0]
+                    next_y_pos = y_pos + self.actions[next_action][1]
+                    if self.row > next_x_pos >= 0 and self.col > next_y_pos >= 0:
+                        next_state = self.col * next_x_pos + next_y_pos
+                    self.p_table[state, next_state, action] += self.slip / self.n_actions
+                    if action == next_action:
+                        self.p_table[state, next_state, action] += 1 - self.slip
     
-    def moveUp(self, next_state, state):
-        if next_state == state:
-            if state < self.lake.shape[1]:
-                pass
+    def calculate_r_table(self):
+        for state in range(self.n_states):
+            if state != self.absorbing_state and self.lake_flat[state] == '$':
+                self.r_table[state, self.absorbing_state, :] = 1
         pass
-    def moveLeft(self, next_state, state):
-        pass
-    def moveDown(self, next_state, state):
-        pass
-    def moveRight(self, next_state, state):
-        pass
-    def step(self, action):
-        state, reward, done = Environment.step(self, action)
-
-        done = (state == self.absorbing_state) or done
-
-        return state, reward, done
 
     def p(self, next_state, state, action):
         pass
