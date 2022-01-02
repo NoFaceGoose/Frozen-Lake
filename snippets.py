@@ -224,11 +224,11 @@ def policy_evaluation(env, policy, gamma, theta, max_iterations):
     while iteration_times < max_iterations and not stop:
         delta = 0
         for state in range(env.n_states):
-            sum = 0
+            action_sum = 0
             current_value = value[state]
             for next_state in range(env.n_states):
-                sum += ((value[state]*gamma) + env.r(state))*env.p(state, next_state, policy[state])
-            value[state] = sum
+                action_sum += ((value[state]*gamma) + env.r(state))*env.p(state, next_state, policy[state])
+            value[state] = action_sum
             delta = max(delta, abs(current_value - value[state]))
         iteration_times += 1
         if delta < theta:
@@ -240,11 +240,11 @@ def policy_improvement(env, value, gamma):
     policy = np.zeros(env.n_states, dtype=int)
 
     for state in range(env.n_states):
-        sum = np.zeros((4))
+        action_sum = np.zeros((4))
         for next_state in range(env.n_states):
             for action in range(env.n_actions):
-                sum[action] += ((value[state] * gamma) + env.r(state))*env.p(state, next_state, action)
-        policy[state] = np.argmax(sum)
+                action_sum[action] += ((value[state] * gamma) + env.r(state))*env.p(state, next_state, action)
+        policy[state] = np.argmax(action_sum)
 
     return policy
 
@@ -271,9 +271,23 @@ def value_iteration(env, gamma, theta, max_iterations, value=None):
         value = np.zeros(env.n_states)
     else:
         value = np.array(value, dtype=np.float)
-
-    # TODO:
-
+    policy = np.zeros(env.n_states, dtype=int)
+    
+    iteration_times = 0
+    stop = False
+    while iteration_times < max_iterations:
+        delta = 0
+        for state in range(env.n_states):
+            action_sum = np.zeros((4))
+            current_value = value[state]
+            for next_state in range(env.n_states):
+                for action in range(env.n_actions):
+                    action_sum[action] += ((value[state] * gamma) + env.r(state))*env.p(state, next_state, action)
+            value[state] = np.max(action_sum)
+            delta = max(delta, abs(current_value-value[state]))
+        iteration_times += 1
+        if delta < theta:
+            stop = True
     return policy, value
 
 
