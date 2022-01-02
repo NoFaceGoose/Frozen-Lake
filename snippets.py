@@ -4,6 +4,8 @@ import numpy as np
 import contextlib
 import random
 
+from numpy.core.numeric import identity
+
 # Configures numpy print options
 
 
@@ -104,7 +106,7 @@ class FrozenLake(Environment):
 
         # initialize p_table (probability table)
         self.p_table = np.zeros((n_states, n_states, n_actions), dtype=float)
-
+        super(FrozenLake, self).__init__(n_states, n_actions, max_steps, pi, seed)
         # assgin each value in p_table
         for state in range(n_states):
             # get the position of current state
@@ -134,7 +136,8 @@ class FrozenLake(Environment):
                     if action == slip_action:
                         self.p_table[state, next_state, action] += 1 - self.slip
                     
-        Environment.__init__(self, n_states, n_actions, max_steps, pi, seed)
+        ## Environment.__init__(self, n_states, n_actions, max_steps, pi, seed)
+
 
     def step(self, action):
         state, reward, done = Environment.step(self, action)
@@ -146,11 +149,16 @@ class FrozenLake(Environment):
     def p(self, next_state, state, action):
         return self.p_table[state][next_state][action]
 
-    def r(self, next_state, state, action):
+    def r(self, state, next_state=None, action=None):
+        print(f"state:{state}")
+        print(f"state_len:{len(self.lake_flat)}")
         if self.lake_flat[state] == "$":
             return 1
         else:
             return 0
+    
+    def get_p(self):
+        return self.p_table
 
     def render(self, policy=None, value=None):
         if policy is None:
@@ -204,22 +212,39 @@ lake = [
     ["#", ".", ".", "$"],
 ]
 env = FrozenLake(lake, slip=0.1, max_steps=16, seed=seed)
-play(env)
+# play(env)
 
 ################ Model-based algorithms ################
 
 def policy_evaluation(env, policy, gamma, theta, max_iterations):
     value = np.zeros(env.n_states, dtype=np.float)
-
-    # TODO:
-
+    # identity_mat = np.identity(env.n_actions)
+    iteration_times = 0
+    stop = False
+    while iteration_times < max_iterations and not stop:
+        delta = 0
+        for state in range(env.n_states):
+            sum = 0
+            current_value = value[state]
+            for next_state in range(env.n_states):
+                sum += ((value[state]*gamma) + env.r(state))*env.p(state, next_state, policy[state])
+            value[state] = sum
+            delta = max(delta, abs(current_value - value[state]))
+        iteration_times += 1
+        if delta < theta:
+            stop = True;
     return value
 
 
 def policy_improvement(env, value, gamma):
     policy = np.zeros(env.n_states, dtype=int)
 
-    # TODO:
+    for state in range(env.n_states):
+        sum = np.zeros((4))
+        for next_state in range(env.n_states):
+            for action in range(env.n_actions):
+                sum[action] += ((value[state] * gamma) + env.r(state))*env.p(state, next_state, action)
+        policy[state] = np.argmax(sum)
 
     return policy
 
@@ -229,8 +254,14 @@ def policy_iteration(env, gamma, theta, max_iterations, policy=None):
         policy = np.zeros(env.n_states, dtype=int)
     else:
         policy = np.array(policy, dtype=int)
+    value = np.zeros(env.n_states, dtype=np.float)
 
-    # TODO:
+    iteration_times = 0
+    
+    while iteration_times < max_iterations:
+        value = policy_evaluation(env, policy, gamma, theta, max_iterations)
+        policy = policy_improvement(env, policy, value, gamma)
+        iteration_times += 1
 
     return policy, value
 
@@ -363,76 +394,3 @@ def linear_q_learning(env, max_episodes, eta, gamma, epsilon, seed=None):
     return theta
 
 
-################ Main function ################
-
-
-def main():
-    seed = 0
-
-    # Small lake
-    lake = [
-        ["&", ".", ".", "."],
-        [".", "#", ".", "#"],
-        [".", ".", ".", "#"],
-        ["#", ".", ".", "$"],
-    ]
-
-    env = FrozenLake(lake, slip=0.1, max_steps=16, seed=seed)
-
-    print(env.p_table)
-
-    print("# Model-based algorithms")
-    gamma = 0.9
-    theta = 0.001
-    max_iterations = 100
-
-    print("")
-
-    print("## Policy iteration")
-    policy, value = policy_iteration(env, gamma, theta, max_iterations)
-    env.render(policy, value)
-
-    print("")
-
-    print("## Value iteration")
-    policy, value = value_iteration(env, gamma, theta, max_iterations)
-    env.render(policy, value)
-
-    print("")
-
-    print("# Model-free algorithms")
-    max_episodes = 2000
-    eta = 0.5
-    epsilon = 0.5
-
-    print("")
-
-    print("## Sarsa")
-    policy, value = sarsa(env, max_episodes, eta, gamma, epsilon, seed=seed)
-    env.render(policy, value)
-
-    print("")
-
-    print("## Q-learning")
-    policy, value = q_learning(env, max_episodes, eta, gamma, epsilon, seed=seed)
-    env.render(policy, value)
-
-    print("")
-
-    linear_env = LinearWrapper(env)
-
-    print("## Linear Sarsa")
-
-    parameters = linear_sarsa(linear_env, max_episodes, eta, gamma, epsilon, seed=seed)
-    policy, value = linear_env.decode_policy(parameters)
-    linear_env.render(policy, value)
-
-    print("")
-
-    print("## Linear Q-learning")
-
-    parameters = linear_q_learning(
-        linear_env, max_episodes, eta, gamma, epsilon, seed=seed
-    )
-    policy, value = linear_env.decode_policy(parameters)
-    linear_env.render(policy, value)
