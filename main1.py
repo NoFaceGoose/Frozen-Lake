@@ -19,8 +19,6 @@ def main():
 
     env = FrozenLake(lake, slip=0.1, max_steps=16, seed=seed)
 
-    print(env.p_table)
-
     print("# Model-based algorithms")
     gamma = 0.9
     theta = 0.001

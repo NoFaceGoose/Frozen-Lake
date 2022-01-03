@@ -149,18 +149,20 @@ class FrozenLake(Environment):
     def p(self, next_state, state, action):
         return self.p_table[state][next_state][action]
 
-    def r(self, state, next_state=None, action=None):
-        print(f"state:{state}")
-        print(f"state_len:{len(self.lake_flat)}")
-        if state == self.absorbing_state:
-            return 0
-        if self.lake_flat[state] == "$":
+    def r(self, state, next_state, action=None):
+        # print(f"state:{state}")
+        # print(f"state_len:{len(self.lake_flat)}")
+        if state != self.absorbing_state and self.lake_flat[state] == '$' and next_state == self.absorbing_state:
+            # print("r return 1")
             return 1
         else:
             return 0
-    
-    def get_p(self):
-        return self.p_table
+        # if state == self.absorbing_state:
+        #     return 0
+        # if self.lake_flat[state] == "$":
+        #     return 1
+        # else:
+        #     return 0
 
     def render(self, policy=None, value=None):
         if policy is None:
@@ -214,6 +216,7 @@ lake = [
     ["#", ".", ".", "$"],
 ]
 env = FrozenLake(lake, slip=0.1, max_steps=16, seed=seed)
+# 
 # play(env)
 
 ################ Model-based algorithms ################
@@ -228,24 +231,31 @@ def policy_evaluation(env, policy, gamma, theta, max_iterations):
         for state in range(env.n_states):
             action_sum = 0
             current_value = value[state]
+            action = policy[state]
             for next_state in range(env.n_states):
-                action_sum += ((value[state]*gamma) + env.r(state))*env.p(state, next_state, policy[state])
+                if env.p(state, next_state, action) != 0:
+                    print(f"state:{state},next_state{next_state}, action:{action}")
+                action_sum += ((value[state]*gamma) + env.r(state, next_state))*env.p(state, next_state, action)
+            if action_sum != 0:
+                print(action_sum)
+            # print(f"action_sum{action_sum}")
             value[state] = action_sum
             delta = max(delta, abs(current_value - value[state]))
         iteration_times += 1
         if delta < theta:
-            stop = True;
+            stop = True
     return value
+    # r 表不会传播，检查for循环 问题出在r表
 
 
 def policy_improvement(env, value, gamma):
     policy = np.zeros(env.n_states, dtype=int)
 
     for state in range(env.n_states):
-        action_sum = np.zeros((4))
+        action_sum = np.zeros((env.n_actions))
         for next_state in range(env.n_states):
             for action in range(env.n_actions):
-                action_sum[action] += ((value[state] * gamma) + env.r(state))*env.p(state, next_state, action)
+                action_sum[action] += ((value[state] * gamma) + env.r(state, next_state))*env.p(state, next_state, action)
         policy[state] = np.argmax(action_sum)
 
     return policy
@@ -262,7 +272,7 @@ def policy_iteration(env, gamma, theta, max_iterations, policy=None):
     
     while iteration_times < max_iterations:
         value = policy_evaluation(env, policy, gamma, theta, max_iterations)
-        policy = policy_improvement(env, policy, value, gamma)
+        policy = policy_improvement(env, value, gamma)
         iteration_times += 1
 
     return policy, value
@@ -277,14 +287,14 @@ def value_iteration(env, gamma, theta, max_iterations, value=None):
     
     iteration_times = 0
     stop = False
-    while iteration_times < max_iterations:
+    while iteration_times < max_iterations and not stop:
         delta = 0
         for state in range(env.n_states):
             action_sum = np.zeros((4))
             current_value = value[state]
             for next_state in range(env.n_states):
                 for action in range(env.n_actions):
-                    action_sum[action] += ((value[state] * gamma) + env.r(state))*env.p(state, next_state, action)
+                    action_sum[action] += ((value[state] * gamma) + env.r(state, next_state))*env.p(state, next_state, action)
             value[state] = np.max(action_sum)
             delta = max(delta, abs(current_value-value[state]))
         iteration_times += 1
