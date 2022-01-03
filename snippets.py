@@ -152,6 +152,8 @@ class FrozenLake(Environment):
     def r(self, state, next_state=None, action=None):
         print(f"state:{state}")
         print(f"state_len:{len(self.lake_flat)}")
+        if state == self.absorbing_state:
+            return 0
         if self.lake_flat[state] == "$":
             return 1
         else:
