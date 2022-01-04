@@ -229,8 +229,6 @@ def policy_evaluation(env, policy, gamma, theta, max_iterations):
             action = policy[state]
             for next_state in range(env.n_states):
                 action_sum += ((value[next_state]*gamma) + env.r(next_state, state))*env.p(next_state, state, action)
-                if env.r(next_state, state) != 0 and env.p(next_state, state, action) != 0:
-                    print(f"state:{state}, next_state:{next_state}, action:{action}")
             # print(f"action_sum{action_sum}")
             value[state] = action_sum
             delta = max(delta, abs(current_value - value[state]))
@@ -426,9 +424,19 @@ def linear_sarsa(env, max_episodes, eta, gamma, epsilon, seed=None):
 
     for i in range(max_episodes):
         features = env.reset()
-
         q = features.dot(theta)
+        a = choose_action(env, q, random_state, epsilon[i])
+        done = False
 
+        while not done:
+            features_next, reward, done = env.step(a)
+            delta = reward - q[a]
+            q = np.dot(features_next, theta)
+            action_next = choose_action(env, q, random_state, epsilon[i])
+            delta += gamma * q[action_next]
+            theta += eta[i] * delta * features[a]
+            features = features_next
+            a = action_next
         # TODO:
 
     return theta
@@ -444,7 +452,19 @@ def linear_q_learning(env, max_episodes, eta, gamma, epsilon, seed=None):
 
     for i in range(max_episodes):
         features = env.reset()
+        q = features.dot(theta)
+        a = choose_action(env, q, random_state, epsilon[i])
+        done = False
 
+        while not done:
+            features_next, reward, done = env.step(a)
+            delta = reward - q[a]
+            q = np.dot(features_next, theta)
+            action_next = choose_action(env, q, random_state, epsilon[i])
+            delta += gamma * np.max(q)
+            theta += eta[i] * delta * features[a]
+            features = features_next
+            a = action_next
         # TODO:
 
     return theta

@@ -1,8 +1,7 @@
 from snippets import FrozenLake
-# from snippets import policy_evaluation, policy_improvement, policy_iteration, value_iteration
-# from snippets import sarsa
-# from snippets import linear_q_learning, linear_sarsa, q_learning, LinearWrapper
-from snippets import policy_evaluation
+from snippets import policy_evaluation, policy_improvement, policy_iteration, value_iteration
+from snippets import sarsa
+from snippets import linear_q_learning, linear_sarsa, q_learning, LinearWrapper
 ################ Main function ################
 
 
