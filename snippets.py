@@ -298,6 +298,23 @@ def value_iteration(env, gamma, theta, max_iterations, value=None):
 
 ################ Tabular model-free algorithms ################
 
+def argmax_random(actions, random_state):
+    max_value = np.max(actions)
+    max_indices = np.flatnonzero(max_value == actions)
+    return random_state.choice(max_indices)
+
+def choose_action(env, actions, random_state, epsilon):
+    if random_state.uniform(0,1) < epsilon:
+        action = random_state.randint(0, env.n_actions)
+    else:
+        action = argmax_random(actions, random_state)
+    return action
+
+def sarsa_update(eta, q, gamma, state, state_next, reward, action, action_next):
+    predict = q[state, action]
+    target = reward + gamma * q[state_next, action_next]
+    q[state, action] += eta * (target - predict)
+
 
 def sarsa(env, max_episodes, eta, gamma, epsilon, seed=None):
     random_state = np.random.RandomState(seed)
@@ -309,13 +326,25 @@ def sarsa(env, max_episodes, eta, gamma, epsilon, seed=None):
 
     for i in range(max_episodes):
         s = env.reset()
-        # TODO:
+        action = choose_action(env, q[s], random_state, epsilon[i])
+        done = False
+
+        while not done:
+            state_next, reward, done = env.step(action)
+            action_next = choose_action(env, q[state_next], random_state, epsilon[i])
+            sarsa_update(eta[i], q, gamma, s, state_next, reward, action, action_next)
+            s = state_next
+            action = action_next
 
     policy = q.argmax(axis=1)
     value = q.max(axis=1)
 
     return policy, value
 
+def q_update(eta, q, gamma, state, state_next, reward, action, action_next):
+    predict = q[state, action]
+    target = reward + gamma * np.max(q[state_next])
+    q[state, action] += eta * (target - predict)
 
 def q_learning(env, max_episodes, eta, gamma, epsilon, seed=None):
     random_state = np.random.RandomState(seed)
@@ -327,7 +356,15 @@ def q_learning(env, max_episodes, eta, gamma, epsilon, seed=None):
 
     for i in range(max_episodes):
         s = env.reset()
-        # TODO:
+        action = choose_action(env, q[s], random_state, epsilon[i])
+        done = False
+
+        while not done:
+            state_next, reward, done = env.step(action)
+            action_next = choose_action(env, q[state_next], random_state, epsilon[i])
+            q_update(eta[i], q, gamma, s, state_next, reward, action, action_next)
+            s = state_next
+            action = action_next
 
     policy = q.argmax(axis=1)
     value = q.max(axis=1)

@@ -2,12 +2,12 @@ from snippets import FrozenLake
 # from snippets import policy_evaluation, policy_improvement, policy_iteration, value_iteration
 # from snippets import sarsa
 # from snippets import linear_q_learning, linear_sarsa, q_learning, LinearWrapper
-from snippets import policy_iteration
+from snippets import sarsa, q_learning
 ################ Main function ################
 
 
 def main():
-    seed = 0
+    seed = 500
 
     # Small lake
     lake = [
@@ -24,10 +24,20 @@ def main():
     theta = 0.001
     max_iterations = 100
 
+    print("# Model-free algorithms")
+    max_episodes = 2000
+    eta = 0.5
+    epsilon = 0.5
+
     print("")
 
-    print("## Policy iteration")
-    policy, value = policy_iteration(env, gamma, theta, max_iterations)
+    print("## Sarsa")
+    policy, value = sarsa(env, max_episodes, eta, gamma, epsilon, seed=seed)
+    env.render(policy, value)
+
+    print("")
+    print("## Q-learning")
+    policy, value = q_learning(env, max_episodes, eta, gamma, epsilon, seed=seed)
     env.render(policy, value)
 
     print("")
