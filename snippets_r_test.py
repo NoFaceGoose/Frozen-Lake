@@ -3,6 +3,7 @@
 import numpy as np
 import contextlib
 import random
+from env_helper import index_to_position, position_to_index
 
 from numpy.core.numeric import identity
 
@@ -101,12 +102,15 @@ class FrozenLake(Environment):
 
         pi = np.zeros(n_states, dtype=float)
         pi[np.where(self.lake_flat == "&")[0]] = 1.0
+        super(FrozenLake, self).__init__(n_states, n_actions, max_steps, pi, seed)
 
         self.absorbing_state = n_states - 1
 
         # initialize p_table (probability table)
         self.p_table = np.zeros((n_states, n_states, n_actions), dtype=float)
-        super(FrozenLake, self).__init__(n_states, n_actions, max_steps, pi, seed)
+        self._r = np.zeros_like(self.p_table)
+        self._populate_rewards()
+        
         # assgin each value in p_table
         for state in range(n_states):
             # get the position of current state
@@ -149,15 +153,30 @@ class FrozenLake(Environment):
     def p(self, next_state, state, action):
         return self.p_table[state][next_state][action]
 
-    def r(self, next_state, state, action=None):
-        # print(f"state:{state}")
-        # print(f"state_len:{len(self.lake_flat)}")
-        if state == self.absorbing_state:
-            return 0
-        if self.lake_flat[state] == "$":
-            return 1
-        else:
-            return 0
+    def r(self, next_state, state, action):
+        """
+            Method to return the reward when transitioning from current state to the next state with action
+
+        :param next_state: Index of next state
+        :param state: Index of current state
+        :param action: Action to be taken
+        :return: Reward for transitioning between state and next_state with action
+        """
+
+        return self._r[state, next_state, action]
+    def _populate_rewards(self):
+        """
+            Method to calculate reward of transitioning between state and next_state with action
+            Algorithm:
+                1. for each state do the steps below
+                2. if the state is a goal state, set the reward for state to absorbing_state for all actions as 1.
+
+        :return: None
+        """
+
+        for state in range(self.n_states):
+            if state != self.absorbing_state and self.lake[index_to_position(state, self.cols)] == '$':
+                self._r[state, self.absorbing_state, :] = 1
 
     def render(self, policy=None, value=None):
         if policy is None:
@@ -228,17 +247,14 @@ def policy_evaluation(env, policy, gamma, theta, max_iterations):
             current_value = value[state]
             action = policy[state]
             for next_state in range(env.n_states):
-                action_sum += ((value[next_state]*gamma) + env.r(next_state, state))*env.p(next_state, state, action)
-                if env.r(next_state, state) != 0 and env.p(next_state, state, action) != 0:
-                    print(f"state:{state}, next_state:{next_state}, action:{action}")
-            # print(f"action_sum{action_sum}")
+                action_sum += env.p(next_state, state, action)*((value[next_state]*gamma) + env.r(next_state, state, action))
+            print(f"action_sum{action_sum}")
             value[state] = action_sum
             delta = max(delta, abs(current_value - value[state]))
         iteration_times += 1
         if delta > theta:
             stop = True
     return value
-    # r 表不会传播，检查for循环 问题出在r表
 
 
 def policy_improvement(env, value, gamma):
@@ -248,7 +264,7 @@ def policy_improvement(env, value, gamma):
         action_sum = np.zeros((env.n_actions))
         for next_state in range(env.n_states):
             for action in range(env.n_actions):
-                action_sum[action] += ((value[next_state] * gamma) + env.r(next_state, state))*env.p(next_state, state, action)
+                action_sum[action] += env.p(next_state, state, action)*((value[next_state] * gamma) + env.r(next_state, state, action))
         policy[state] = np.argmax(action_sum)
 
     return policy
@@ -287,129 +303,40 @@ def value_iteration(env, gamma, theta, max_iterations, value=None):
             current_value = value[state]
             for next_state in range(env.n_states):
                 for action in range(env.n_actions):
-                    action_sum[action] += ((value[next_state] * gamma) + env.r(next_state, state))*env.p(next_state, state, action)
+                    action_sum[action] += env.p(next_state, state, action)*((value[state] * gamma) + env.r(next_state, state, action))
             value[state] = np.max(action_sum)
             delta = max(delta, abs(current_value-value[state]))
         iteration_times += 1
         if delta < theta:
             stop = True
     return policy, value
+################ Main function ################
 
 
-################ Tabular model-free algorithms ################
+def main():
+    seed = 0
 
+    # Small lake
+    lake = [
+        ["&", ".", ".", "."],
+        [".", "#", ".", "#"],
+        [".", ".", ".", "#"],
+        ["#", ".", ".", "$"],
+    ]
 
-def sarsa(env, max_episodes, eta, gamma, epsilon, seed=None):
-    random_state = np.random.RandomState(seed)
+    env = FrozenLake(lake, slip=0.1, max_steps=16, seed=seed)
 
-    eta = np.linspace(eta, 0, max_episodes)
-    epsilon = np.linspace(epsilon, 0, max_episodes)
+    print("# Model-based algorithms")
+    gamma = 0.9
+    theta = 0.001
+    max_iterations = 100
 
-    q = np.zeros((env.n_states, env.n_actions))
+    print("")
 
-    for i in range(max_episodes):
-        s = env.reset()
-        # TODO:
+    print("## Policy iteration")
+    policy, value = policy_iteration(env, gamma, theta, max_iterations)
+    env.render(policy, value)
 
-    policy = q.argmax(axis=1)
-    value = q.max(axis=1)
+    print("")
 
-    return policy, value
-
-
-def q_learning(env, max_episodes, eta, gamma, epsilon, seed=None):
-    random_state = np.random.RandomState(seed)
-
-    eta = np.linspace(eta, 0, max_episodes)
-    epsilon = np.linspace(epsilon, 0, max_episodes)
-
-    q = np.zeros((env.n_states, env.n_actions))
-
-    for i in range(max_episodes):
-        s = env.reset()
-        # TODO:
-
-    policy = q.argmax(axis=1)
-    value = q.max(axis=1)
-
-    return policy, value
-
-
-################ Non-tabular model-free algorithms ################
-
-
-class LinearWrapper:
-    def __init__(self, env):
-        self.env = env
-
-        self.n_actions = self.env.n_actions
-        self.n_states = self.env.n_states
-        self.n_features = self.n_actions * self.n_states
-
-    def encode_state(self, s):
-        features = np.zeros((self.n_actions, self.n_features))
-        for a in range(self.n_actions):
-            i = np.ravel_multi_index((s, a), (self.n_states, self.n_actions))
-            features[a, i] = 1.0
-
-        return features
-
-    def decode_policy(self, theta):
-        policy = np.zeros(self.env.n_states, dtype=int)
-        value = np.zeros(self.env.n_states)
-
-        for s in range(self.n_states):
-            features = self.encode_state(s)
-            q = features.dot(theta)
-
-            policy[s] = np.argmax(q)
-            value[s] = np.max(q)
-
-        return policy, value
-
-    def reset(self):
-        return self.encode_state(self.env.reset())
-
-    def step(self, action):
-        state, reward, done = self.env.step(action)
-
-        return self.encode_state(state), reward, done
-
-    def render(self, policy=None, value=None):
-        self.env.render(policy, value)
-
-
-def linear_sarsa(env, max_episodes, eta, gamma, epsilon, seed=None):
-    random_state = np.random.RandomState(seed)
-
-    eta = np.linspace(eta, 0, max_episodes)
-    epsilon = np.linspace(epsilon, 0, max_episodes)
-
-    theta = np.zeros(env.n_features)
-
-    for i in range(max_episodes):
-        features = env.reset()
-
-        q = features.dot(theta)
-
-        # TODO:
-
-    return theta
-
-
-def linear_q_learning(env, max_episodes, eta, gamma, epsilon, seed=None):
-    random_state = np.random.RandomState(seed)
-
-    eta = np.linspace(eta, 0, max_episodes)
-    epsilon = np.linspace(epsilon, 0, max_episodes)
-
-    theta = np.zeros(env.n_features)
-
-    for i in range(max_episodes):
-        features = env.reset()
-
-        # TODO:
-
-    return theta
-
-
+main()
