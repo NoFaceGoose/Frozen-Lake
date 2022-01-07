@@ -75,4 +75,6 @@ def value_iteration(env, gamma, theta, max_iterations, value=None):
         iteration_times += 1
         if delta < theta:
             stop = True
+    
+    policy = policy_improvement(env, value, gamma)
     return policy, value
