@@ -157,4 +157,6 @@ def bigLake():
     linear_env.render(policy, value)
 
 if __name__ == "__main__":
+    smallLake()
+    print("-----------------------------------------")
     bigLake()
