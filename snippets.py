@@ -228,12 +228,14 @@ def policy_evaluation(env, policy, gamma, theta, max_iterations):
             current_value = value[state]
             action = policy[state]
             for next_state in range(env.n_states):
-                action_sum += ((value[next_state]*gamma) + env.r(next_state, state))*env.p(next_state, state, action)
+                action_sum += env.p(next_state, state, action) * ((value[next_state]*gamma) + env.r(next_state, state, action))
             # print(f"action_sum{action_sum}")
             value[state] = action_sum
             delta = max(delta, abs(current_value - value[state]))
+
         iteration_times += 1
-        if delta > theta:
+        # if delta > theta:
+        if delta < theta:
             stop = True
     return value
     # r 表不会传播，检查for循环 问题出在r表
