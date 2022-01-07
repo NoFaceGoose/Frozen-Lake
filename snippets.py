@@ -104,18 +104,20 @@ class FrozenLake(Environment):
 
         self.absorbing_state = n_states - 1
 
+        super(FrozenLake, self).__init__(n_states, n_actions, max_steps, pi, seed)
+
         # initialize p_table (probability table)
         self.p_table = np.zeros((n_states, n_states, n_actions), dtype=float)
-        super(FrozenLake, self).__init__(n_states, n_actions, max_steps, pi, seed)
+
         # assgin each value in p_table
         for state in range(n_states):
-            # get the position of current state
-            row, col = int(state /  self.cols), state %  self.cols
-
             # for the absorbing, hole and goal state, the next state must be absorbing state
             if state == self.absorbing_state or self.lake_flat[state] in ('#', '$'):
                 self.p_table[state, self.absorbing_state, :] = 1
                 continue
+            
+            # get the position of current state
+            row, col = int(state /  self.cols), state %  self.cols
             
             # assign and accumulate the value for each action
             for action in range(n_actions):
@@ -135,9 +137,6 @@ class FrozenLake(Environment):
                     # assign the probability of no slipping to the current state, next_state and action
                     if action == slip_action:
                         self.p_table[state, next_state, action] += 1 - self.slip
-                    
-        ## Environment.__init__(self, n_states, n_actions, max_steps, pi, seed)
-
 
     def step(self, action):
         state, reward, done = Environment.step(self, action)
