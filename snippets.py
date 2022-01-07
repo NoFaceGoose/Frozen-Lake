@@ -218,7 +218,6 @@ env = FrozenLake(lake, slip=0.1, max_steps=16, seed=seed)
 
 def policy_evaluation(env, policy, gamma, theta, max_iterations):
     value = np.zeros(env.n_states, dtype=np.float)
-    # identity_mat = np.identity(env.n_actions)
     iteration_times = 0
     stop = False
     while iteration_times < max_iterations and not stop:
@@ -229,17 +228,13 @@ def policy_evaluation(env, policy, gamma, theta, max_iterations):
             action = policy[state]
             for next_state in range(env.n_states):
                 action_sum += env.p(next_state, state, action) * ((value[next_state]*gamma) + env.r(next_state, state, action))
-            # print(f"action_sum{action_sum}")
             value[state] = action_sum
             delta = max(delta, abs(current_value - value[state]))
 
         iteration_times += 1
-        # if delta > theta:
         if delta < theta:
             stop = True
     return value
-    # r 表不会传播，检查for循环 问题出在r表
-
 
 def policy_improvement(env, value, gamma):
     policy = np.zeros(env.n_states, dtype=int)
@@ -439,7 +434,6 @@ def linear_sarsa(env, max_episodes, eta, gamma, epsilon, seed=None):
             theta += eta[i] * delta * features[a]
             features = features_next
             a = action_next
-        # TODO:
 
     return theta
 
@@ -467,7 +461,6 @@ def linear_q_learning(env, max_episodes, eta, gamma, epsilon, seed=None):
             theta += eta[i] * delta * features[a]
             features = features_next
             a = action_next
-        # TODO:
 
     return theta
 
