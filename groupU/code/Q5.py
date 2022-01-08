@@ -38,9 +38,9 @@ def bigLake():
 
     print("# Model-free algorithms")
     # change for big lake
-    max_episodes = 20000
-    eta = 0.99
-    epsilon = 0.99
+    max_episodes = 12000
+    eta = 0.5
+    epsilon = 0
 
     print("")
 
