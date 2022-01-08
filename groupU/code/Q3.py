@@ -26,7 +26,7 @@ def smallLake():
     print("")
 
     print("# Model-free algorithms")
-    max_episodes = 189
+    max_episodes = 247
     eta = 0.5
     epsilon = 0.5
 

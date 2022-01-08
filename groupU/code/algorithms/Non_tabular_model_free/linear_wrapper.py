@@ -11,7 +11,7 @@ class LinearWrapper:
     def encode_state(self, s):
         features = np.zeros((self.n_actions, self.n_features))
         for a in range(self.n_actions):
-            i = np.ravel_multi_index((s, a), (self.n_states, self.n_actions))
+            i = np.ravel_multi_index((s, a), (self.n_states, self.n_actions)) # randomly choose a state and get the feature of each action
             features[a, i] = 1.0
 
         return features

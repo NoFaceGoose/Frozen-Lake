@@ -7,11 +7,11 @@ def linear_q_learning(env, max_episodes, eta, gamma, epsilon, seed=None):
     eta = np.linspace(eta, 0, max_episodes)
     epsilon = np.linspace(epsilon, 0, max_episodes)
 
-    theta = np.zeros(env.n_features)
+    theta = np.zeros(env.n_features) # n_features = n_actions * n_states
 
     for i in range(max_episodes):
-        features = env.reset()
-        q = features.dot(theta)
+        features = env.reset() # return a set feature table
+        q = features.dot(theta) 
         a = choose_action(env, q, random_state, epsilon[i])
         done = False
 
